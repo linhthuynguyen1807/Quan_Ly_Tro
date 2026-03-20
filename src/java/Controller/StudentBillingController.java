@@ -54,6 +54,9 @@ public class StudentBillingController extends HttpServlet {
             }
         }
 
+        // Pending bills for sidebar badge
+        int pendingBills = invoiceDAO.countInvoicesByStudent(studentId, "unpaid");
+
         request.setAttribute("invoices", invoices);
         request.setAttribute("totalPaid", totalPaid);
         request.setAttribute("totalUnpaid", totalUnpaid);
@@ -62,6 +65,7 @@ public class StudentBillingController extends HttpServlet {
         request.setAttribute("totalRecords", totalRecords);
         request.setAttribute("filterStatus", status);
         request.setAttribute("unreadCount", notiDAO.countUnreadByUserId(user.getUser_id()));
+        request.setAttribute("pendingBills", pendingBills);
         request.getRequestDispatcher("/student/billing.jsp").forward(request, response);
     }
 }

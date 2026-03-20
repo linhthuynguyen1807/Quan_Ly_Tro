@@ -2,6 +2,8 @@ package Controller;
 
 import dal.*;
 import model.*;
+import util.OwnershipUtil;
+import util.ValidationUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.*;
 import java.io.IOException;
@@ -36,7 +38,16 @@ public class AdminInvoicesController extends HttpServlet {
         List<Invoice> invoices;
 
         if (hostelIdParam != null && !hostelIdParam.isEmpty()) {
-            int hostelId = Integer.parseInt(hostelIdParam);
+            int hostelId;
+            try { hostelId = Integer.parseInt(hostelIdParam); } catch (NumberFormatException e) {
+                response.sendRedirect(request.getContextPath() + "/admin/invoices?error=invalid_input");
+                return;
+            }
+            // Ownership verification: prevent IDOR
+            if (!OwnershipUtil.verifyHostelOwnership(hostelId, user.getUser_id())) {
+                response.sendRedirect(request.getContextPath() + "/admin/invoices?error=unauthorized");
+                return;
+            }
             totalRecords = invoiceDAO.countInvoicesByHostel(hostelId, status, search);
             invoices = invoiceDAO.getInvoicesByHostelPaginated(hostelId, status, search, offset, PAGE_SIZE);
             request.setAttribute("selectedHostelId", hostelId);
@@ -65,11 +76,16 @@ public class AdminInvoicesController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        User user = (User) request.getSession().getAttribute("user");
         String action = request.getParameter("action");
         InvoiceDAO invoiceDAO = new InvoiceDAO();
 
         if ("markPaid".equals(action)) {
-            int invoiceId = Integer.parseInt(request.getParameter("invoiceId"));
+            int invoiceId = ValidationUtil.parsePositiveInt(request.getParameter("invoiceId"));
+            if (invoiceId < 0) {
+                response.sendRedirect(request.getContextPath() + "/admin/invoices?error=invalid_input");
+                return;
+            }
             invoiceDAO.updateStatus(invoiceId, "paid");
 
             PaymentDAO paymentDAO = new PaymentDAO();
@@ -82,24 +98,36 @@ public class AdminInvoicesController extends HttpServlet {
                 paymentDAO.addPayment(payment);
             }
         } else if ("add".equals(action)) {
-            Invoice invoice = new Invoice();
-            invoice.setContract_id(Integer.parseInt(request.getParameter("contractId")));
-            invoice.setRoomFee(Double.parseDouble(request.getParameter("roomFee")));
-            invoice.setElectricFee(Double.parseDouble(request.getParameter("electricFee")));
-            invoice.setWaterFee(Double.parseDouble(request.getParameter("waterFee")));
-            invoice.setServiceFee(Double.parseDouble(request.getParameter("serviceFee")));
+            int contractId = ValidationUtil.parsePositiveInt(request.getParameter("contractId"));
+            double roomFee = ValidationUtil.parseNonNegativeDouble(request.getParameter("roomFee"));
+            double electricFee = ValidationUtil.parseNonNegativeDouble(request.getParameter("electricFee"));
+            double waterFee = ValidationUtil.parseNonNegativeDouble(request.getParameter("waterFee"));
+            double serviceFee = ValidationUtil.parseNonNegativeDouble(request.getParameter("serviceFee"));
 
-            double total = invoice.getRoomFee() + invoice.getElectricFee()
-                    + invoice.getWaterFee() + invoice.getServiceFee();
+            if (contractId < 0 || roomFee < 0 || electricFee < 0 || waterFee < 0 || serviceFee < 0) {
+                response.sendRedirect(request.getContextPath() + "/admin/invoices?error=invalid_input");
+                return;
+            }
+
+            Invoice invoice = new Invoice();
+            invoice.setContract_id(contractId);
+            invoice.setRoomFee(roomFee);
+            invoice.setElectricFee(electricFee);
+            invoice.setWaterFee(waterFee);
+            invoice.setServiceFee(serviceFee);
+
+            double total = roomFee + electricFee + waterFee + serviceFee;
             invoice.setTotalAmount(total);
             invoice.setStatus("unpaid");
+
             String dueDateStr = request.getParameter("dueDate");
-            if (dueDateStr != null && !dueDateStr.isEmpty()) {
+            if (!ValidationUtil.isNullOrEmpty(dueDateStr)) {
                 try {
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
                     invoice.setDueDate(sdf.parse(dueDateStr));
                 } catch (ParseException e) {
-                    e.printStackTrace();
+                    response.sendRedirect(request.getContextPath() + "/admin/invoices?error=invalid_date");
+                    return;
                 }
             }
 

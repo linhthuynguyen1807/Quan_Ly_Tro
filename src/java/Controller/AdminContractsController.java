@@ -2,6 +2,8 @@ package Controller;
 
 import dal.*;
 import model.*;
+import util.OwnershipUtil;
+import util.ValidationUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.*;
 import java.io.IOException;
@@ -36,7 +38,16 @@ public class AdminContractsController extends HttpServlet {
         List<Contract> contracts;
 
         if (hostelIdParam != null && !hostelIdParam.isEmpty()) {
-            int hostelId = Integer.parseInt(hostelIdParam);
+            int hostelId;
+            try { hostelId = Integer.parseInt(hostelIdParam); } catch (NumberFormatException e) {
+                response.sendRedirect(request.getContextPath() + "/admin/contracts?error=invalid_input");
+                return;
+            }
+            // Ownership verification: prevent IDOR
+            if (!OwnershipUtil.verifyHostelOwnership(hostelId, user.getUser_id())) {
+                response.sendRedirect(request.getContextPath() + "/admin/contracts?error=unauthorized");
+                return;
+            }
             totalRecords = contractDAO.countContractsByHostel(hostelId, status, search);
             contracts = contractDAO.getContractsByHostelPaginated(hostelId, status, search, offset, PAGE_SIZE);
             request.setAttribute("selectedHostelId", hostelId);
@@ -65,26 +76,46 @@ public class AdminContractsController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        User user = (User) request.getSession().getAttribute("user");
         String action = request.getParameter("action");
         ContractDAO contractDAO = new ContractDAO();
 
         if ("add".equals(action)) {
+            int studentId = ValidationUtil.parsePositiveInt(request.getParameter("studentId"));
+            int roomId = ValidationUtil.parsePositiveInt(request.getParameter("roomId"));
+            double monthlyRent = ValidationUtil.parsePositiveDouble(request.getParameter("monthlyRent"));
+            double deposit = ValidationUtil.parseNonNegativeDouble(request.getParameter("deposit"));
+            String startDateStr = request.getParameter("startDate");
+            String endDateStr = request.getParameter("endDate");
+
+            if (studentId < 0 || roomId < 0 || monthlyRent < 0 || deposit < 0
+                    || ValidationUtil.isNullOrEmpty(startDateStr) || ValidationUtil.isNullOrEmpty(endDateStr)) {
+                response.sendRedirect(request.getContextPath() + "/admin/contracts?error=invalid_input");
+                return;
+            }
+
             Contract contract = new Contract();
-            contract.setStudent_id(Integer.parseInt(request.getParameter("studentId")));
-            contract.setRoom_id(Integer.parseInt(request.getParameter("roomId")));
+            contract.setStudent_id(studentId);
+            contract.setRoom_id(roomId);
             try {
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-                contract.setStart_date(sdf.parse(request.getParameter("startDate")));
-                contract.setEnd_date(sdf.parse(request.getParameter("endDate")));
+                contract.setStart_date(sdf.parse(startDateStr));
+                contract.setEnd_date(sdf.parse(endDateStr));
             } catch (ParseException e) {
-                e.printStackTrace();
+                response.sendRedirect(request.getContextPath() + "/admin/contracts?error=invalid_date");
+                return;
             }
-            contract.setMonthly_rent(Double.parseDouble(request.getParameter("monthlyRent")));
-            contract.setDeposit(Double.parseDouble(request.getParameter("deposit")));
+            contract.setMonthly_rent(monthlyRent);
+            contract.setDeposit(deposit);
             contract.setStatus("active");
             contractDAO.addContract(contract);
+
         } else if ("terminate".equals(action)) {
-            int contractId = Integer.parseInt(request.getParameter("contractId"));
+            int contractId = ValidationUtil.parsePositiveInt(request.getParameter("contractId"));
+            if (contractId < 0) {
+                response.sendRedirect(request.getContextPath() + "/admin/contracts?error=invalid_input");
+                return;
+            }
             contractDAO.updateStatus(contractId, "terminated");
         }
 

@@ -188,6 +188,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <form method="post" action="${pageContext.request.contextPath}/student/maintenance">
+                    <input type="hidden" name="_csrf" value="${sessionScope.csrfToken}"/>
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Tiêu đề <span style="color:var(--danger);">*</span></label>

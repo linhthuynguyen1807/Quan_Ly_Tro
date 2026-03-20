@@ -4,6 +4,8 @@ import dal.HostelDAO;
 import dal.NotificationDAO;
 import dal.RoomDAO;
 import model.*;
+import util.OwnershipUtil;
+import util.ValidationUtil;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import java.io.IOException;
@@ -52,7 +54,6 @@ public class AdminRoomsController extends HttpServlet {
             List<Room> rooms = roomDAO.getRoomsByHostelPaginated(hostelId, status, search, floor, offset, PAGE_SIZE);
             int totalPages = (int) Math.ceil((double) totalRecords / PAGE_SIZE);
 
-            // Get distinct floors for filter dropdown
             List<Integer> floors = roomDAO.getDistinctFloors(hostelId);
 
             request.setAttribute("rooms", rooms);
@@ -66,7 +67,6 @@ public class AdminRoomsController extends HttpServlet {
             request.setAttribute("selectedFloor", floor);
             request.setAttribute("floors", floors);
 
-            // Room status counts for stat badges
             int[] statusCounts = roomDAO.getRoomStatusCounts(hostelId);
             request.setAttribute("availableRooms", statusCounts[0]);
             request.setAttribute("fullRooms", statusCounts[1]);
@@ -80,43 +80,89 @@ public class AdminRoomsController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        User user = (User) request.getSession().getAttribute("user");
         String action = request.getParameter("action");
         RoomDAO roomDAO = new RoomDAO();
         String hostelIdParam = request.getParameter("hostelId");
 
+        int hostelId = ValidationUtil.parsePositiveInt(hostelIdParam);
+        if (hostelId < 0) {
+            response.sendRedirect(request.getContextPath() + "/admin/rooms?error=invalid_input");
+            return;
+        }
+
+        // Ownership verification: ensure hostel belongs to this landlord
+        if (!OwnershipUtil.verifyHostelOwnership(hostelId, user.getUser_id())) {
+            response.sendRedirect(request.getContextPath() + "/admin/rooms?error=unauthorized");
+            return;
+        }
+
         try {
             if ("add".equals(action)) {
-                Room room = new Room();
-                room.setHostel_id(Integer.parseInt(hostelIdParam));
-                room.setRoom_number(request.getParameter("roomNumber"));
-                room.setArea(Float.parseFloat(request.getParameter("area")));
-                room.setPrice(Double.parseDouble(request.getParameter("price")));
-                room.setMax_capacity(Integer.parseInt(request.getParameter("capacity")));
-                room.setRoomType(request.getParameter("roomType"));
+                String roomNumber = ValidationUtil.sanitize(request.getParameter("roomNumber"));
+                double area = ValidationUtil.parsePositiveDouble(request.getParameter("area"));
+                double price = ValidationUtil.parsePositiveDouble(request.getParameter("price"));
+                int capacity = ValidationUtil.parsePositiveInt(request.getParameter("capacity"));
+                String roomType = ValidationUtil.sanitize(request.getParameter("roomType"));
                 String floorStr = request.getParameter("floorNumber");
-                room.setFloorNumber(floorStr != null && !floorStr.isEmpty() ? Integer.parseInt(floorStr) : 1);
+                int floorNumber = (floorStr != null && !floorStr.isEmpty()) ? ValidationUtil.parsePositiveInt(floorStr) : 1;
+
+                if (ValidationUtil.isNullOrEmpty(roomNumber) || area < 0 || price < 0 || capacity < 0) {
+                    response.sendRedirect(request.getContextPath() + "/admin/rooms?hostelId=" + hostelId + "&error=invalid_input");
+                    return;
+                }
+
+                Room room = new Room();
+                room.setHostel_id(hostelId);
+                room.setRoom_number(roomNumber);
+                room.setArea((float) area);
+                room.setPrice(price);
+                room.setMax_capacity(capacity);
+                room.setRoomType(roomType);
+                room.setFloorNumber(floorNumber > 0 ? floorNumber : 1);
                 room.setStatus("Trống");
                 roomDAO.addRoom(room);
-                response.sendRedirect(request.getContextPath() + "/admin/rooms?hostelId=" + room.getHostel_id());
+                response.sendRedirect(request.getContextPath() + "/admin/rooms?hostelId=" + hostelId);
+
             } else if ("update".equals(action)) {
-                Room room = new Room();
-                room.setRoom_id(Integer.parseInt(request.getParameter("roomId")));
-                room.setRoom_number(request.getParameter("roomNumber"));
-                room.setArea(Float.parseFloat(request.getParameter("area")));
-                room.setPrice(Double.parseDouble(request.getParameter("price")));
-                room.setMax_capacity(Integer.parseInt(request.getParameter("capacity")));
-                room.setRoomType(request.getParameter("roomType"));
+                int roomId = ValidationUtil.parsePositiveInt(request.getParameter("roomId"));
+                String roomNumber = ValidationUtil.sanitize(request.getParameter("roomNumber"));
+                double area = ValidationUtil.parsePositiveDouble(request.getParameter("area"));
+                double price = ValidationUtil.parsePositiveDouble(request.getParameter("price"));
+                int capacity = ValidationUtil.parsePositiveInt(request.getParameter("capacity"));
+                String roomType = ValidationUtil.sanitize(request.getParameter("roomType"));
                 String floorStr = request.getParameter("floorNumber");
-                room.setFloorNumber(floorStr != null && !floorStr.isEmpty() ? Integer.parseInt(floorStr) : 1);
-                room.setStatus(request.getParameter("status"));
+                int floorNumber = (floorStr != null && !floorStr.isEmpty()) ? ValidationUtil.parsePositiveInt(floorStr) : 1;
+                String status = ValidationUtil.sanitize(request.getParameter("status"));
+
+                if (roomId < 0 || ValidationUtil.isNullOrEmpty(roomNumber) || area < 0 || price < 0 || capacity < 0) {
+                    response.sendRedirect(request.getContextPath() + "/admin/rooms?hostelId=" + hostelId + "&error=invalid_input");
+                    return;
+                }
+
+                Room room = new Room();
+                room.setRoom_id(roomId);
+                room.setRoom_number(roomNumber);
+                room.setArea((float) area);
+                room.setPrice(price);
+                room.setMax_capacity(capacity);
+                room.setRoomType(roomType);
+                room.setFloorNumber(floorNumber > 0 ? floorNumber : 1);
+                room.setStatus(status);
                 roomDAO.updateRoom(room);
-                response.sendRedirect(request.getContextPath() + "/admin/rooms?hostelId=" + hostelIdParam);
+                response.sendRedirect(request.getContextPath() + "/admin/rooms?hostelId=" + hostelId);
+
             } else if ("delete".equals(action)) {
-                roomDAO.deleteRoom(Integer.parseInt(request.getParameter("roomId")));
-                response.sendRedirect(request.getContextPath() + "/admin/rooms?hostelId=" + hostelIdParam);
+                int roomId = ValidationUtil.parsePositiveInt(request.getParameter("roomId"));
+                if (roomId < 0) {
+                    response.sendRedirect(request.getContextPath() + "/admin/rooms?hostelId=" + hostelId + "&error=invalid_input");
+                    return;
+                }
+                roomDAO.deleteRoom(roomId);
+                response.sendRedirect(request.getContextPath() + "/admin/rooms?hostelId=" + hostelId);
             }
-        } catch (NumberFormatException e) {
-            response.sendRedirect(request.getContextPath() + "/admin/rooms?hostelId=" + hostelIdParam + "&error=invalid_input");
+        } catch (Exception e) {
+            response.sendRedirect(request.getContextPath() + "/admin/rooms?hostelId=" + hostelId + "&error=invalid_input");
         }
     }
 }

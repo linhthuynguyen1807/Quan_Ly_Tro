@@ -76,6 +76,7 @@
                 </div>
                 <c:if test="${unreadCount != null && unreadCount > 0}">
                     <form method="post" action="${pageContext.request.contextPath}/student/notifications">
+                        <input type="hidden" name="_csrf" value="${sessionScope.csrfToken}"/>
                         <input type="hidden" name="action" value="markAllRead">
                         <button type="submit" class="btn btn-outline-primary btn-sm" style="border-radius:10px; font-size:0.82rem;">
                             <i class="fas fa-check-double me-1"></i>Đánh dấu tất cả đã đọc
@@ -112,6 +113,7 @@
                                 <div class="noti-actions">
                                     <c:if test="${!noti.read}">
                                         <form method="post" action="${pageContext.request.contextPath}/student/notifications">
+                                            <input type="hidden" name="_csrf" value="${sessionScope.csrfToken}"/>
                                             <input type="hidden" name="action" value="markRead">
                                             <input type="hidden" name="notificationId" value="${noti.notification_id}">
                                             <button type="submit" class="btn btn-sm" style="border:none; background:none; color:var(--primary-500); font-size:0.8rem;" title="Đánh dấu đã đọc">

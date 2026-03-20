@@ -79,6 +79,7 @@
                             <i class="fas fa-user-edit me-2" style="color:var(--primary-500);"></i>Cập nhật thông tin
                         </h6>
                         <form method="post" action="${pageContext.request.contextPath}/student/profile">
+                            <input type="hidden" name="_csrf" value="${sessionScope.csrfToken}"/>
                             <input type="hidden" name="action" value="updateProfile">
                             <div class="row g-3">
                                 <div class="col-md-12">
@@ -111,6 +112,7 @@
                             <i class="fas fa-lock me-2" style="color:#F59E0B;"></i>Đổi mật khẩu
                         </h6>
                         <form method="post" action="${pageContext.request.contextPath}/student/profile">
+                            <input type="hidden" name="_csrf" value="${sessionScope.csrfToken}"/>
                             <input type="hidden" name="action" value="changePassword">
                             <div class="row g-3">
                                 <div class="col-md-12">

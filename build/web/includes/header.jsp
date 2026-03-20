@@ -56,14 +56,32 @@
                 <li><h6 class="dropdown-header">Xin chào, ${not empty sessionScope.user ? sessionScope.user.username : 'Guest'}!</h6></li>
                 <li><hr class="dropdown-divider"></li>
                 <li>
-                    <a class="dropdown-item" href="${pageContext.request.contextPath}/profile">
-                        <i class="fas fa-user me-2 text-muted"></i> Tài khoản
-                    </a>
+                    <c:choose>
+                        <c:when test="${sessionScope.user.role == 'landlord'}">
+                            <a class="dropdown-item" href="${pageContext.request.contextPath}/admin/profile">
+                                <i class="fas fa-user me-2 text-muted"></i> Tài khoản
+                            </a>
+                        </c:when>
+                        <c:otherwise>
+                            <a class="dropdown-item" href="${pageContext.request.contextPath}/student/profile">
+                                <i class="fas fa-user me-2 text-muted"></i> Tài khoản
+                            </a>
+                        </c:otherwise>
+                    </c:choose>
                 </li>
                 <li>
-                    <a class="dropdown-item" href="${pageContext.request.contextPath}/settings">
-                        <i class="fas fa-cog me-2 text-muted"></i> Cài đặt
-                    </a>
+                    <c:choose>
+                        <c:when test="${sessionScope.user.role == 'landlord'}">
+                            <a class="dropdown-item" href="${pageContext.request.contextPath}/admin/settings">
+                                <i class="fas fa-cog me-2 text-muted"></i> Cài đặt
+                            </a>
+                        </c:when>
+                        <c:otherwise>
+                            <a class="dropdown-item" href="${pageContext.request.contextPath}/student/settings">
+                                <i class="fas fa-cog me-2 text-muted"></i> Cài đặt
+                            </a>
+                        </c:otherwise>
+                    </c:choose>
                 </li>
                 <li><hr class="dropdown-divider"></li>
                 <li>

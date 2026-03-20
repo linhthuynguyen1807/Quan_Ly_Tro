@@ -19,21 +19,34 @@ public class DBContext implements AutoCloseable {
 
     public DBContext() {
         try {
-            Properties properties = new Properties();
-            InputStream inputStream = getClass().getClassLoader()
-                    .getResourceAsStream("../ConnectDB.properties");
-            try {
-                properties.load(inputStream);
-            } catch (IOException ex) {
-                Logger.getLogger(DBContext.class.getName()).log(Level.SEVERE, null, ex);
+            // Priority 1: Environment variables (for production/deployment)
+            String url = System.getenv("DB_URL");
+            String user = System.getenv("DB_USER");
+            String pass = System.getenv("DB_PASSWORD");
+
+            // Priority 2: Fallback to properties file (for local development)
+            if (url == null || url.isEmpty()) {
+                Properties properties = new Properties();
+                InputStream inputStream = getClass().getClassLoader()
+                        .getResourceAsStream("../ConnectDB.properties");
+                if (inputStream != null) {
+                    try {
+                        properties.load(inputStream);
+                    } catch (IOException ex) {
+                        Logger.getLogger(DBContext.class.getName()).log(Level.SEVERE,
+                                "Failed to load ConnectDB.properties", ex);
+                    }
+                }
+                user = properties.getProperty("userID");
+                pass = properties.getProperty("password");
+                url = properties.getProperty("url");
             }
-            String user = properties.getProperty("userID");
-            String pass = properties.getProperty("password");
-            String url = properties.getProperty("url");
+
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
             connection = DriverManager.getConnection(url, user, pass);
         } catch (ClassNotFoundException | SQLException ex) {
-            Logger.getLogger(DBContext.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DBContext.class.getName()).log(Level.SEVERE,
+                    "Database connection failed", ex);
         }
     }
 

@@ -2,6 +2,7 @@ package Controller;
 
 import dal.*;
 import model.*;
+import util.ValidationUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.*;
 import java.io.IOException;
@@ -93,20 +94,48 @@ public class AdminStudentsController extends HttpServlet {
 
         try {
             if ("add".equals(action)) {
+                int userId = ValidationUtil.parsePositiveInt(request.getParameter("userId"));
+                if (userId < 0) {
+                    response.sendRedirect(request.getContextPath() + "/admin/students?error=invalid_user");
+                    return;
+                }
+
                 Student student = new Student();
-                student.setUser_id(Integer.parseInt(request.getParameter("userId")));
-                student.setFull_name(request.getParameter("fullName"));
-                student.setCccd(request.getParameter("cccd"));
-                student.setSchool(request.getParameter("school"));
-                student.setPhone(request.getParameter("phone"));
-                student.setGender(request.getParameter("gender"));
-                student.setAddress(request.getParameter("address"));
+                student.setUser_id(userId);
+                student.setFull_name(ValidationUtil.sanitize(request.getParameter("fullName")));
+                student.setCccd(ValidationUtil.sanitize(request.getParameter("cccd")));
+                student.setSchool(ValidationUtil.sanitize(request.getParameter("school")));
+                student.setPhone(ValidationUtil.sanitize(request.getParameter("phone")));
+                student.setGender(ValidationUtil.sanitize(request.getParameter("gender")));
+                student.setAddress(ValidationUtil.sanitize(request.getParameter("address")));
                 studentDAO.addStudent(student);
+
+            } else if ("update".equals(action)) {
+                int studentId = ValidationUtil.parsePositiveInt(request.getParameter("studentId"));
+                if (studentId < 0) {
+                    response.sendRedirect(request.getContextPath() + "/admin/students?error=invalid_student");
+                    return;
+                }
+
+                Student student = new Student();
+                student.setStudent_id(studentId);
+                student.setFull_name(ValidationUtil.sanitize(request.getParameter("fullName")));
+                student.setCccd(ValidationUtil.sanitize(request.getParameter("cccd")));
+                student.setSchool(ValidationUtil.sanitize(request.getParameter("school")));
+                student.setPhone(ValidationUtil.sanitize(request.getParameter("phone")));
+                student.setGender(ValidationUtil.sanitize(request.getParameter("gender")));
+                student.setAddress(ValidationUtil.sanitize(request.getParameter("address")));
+                studentDAO.updateStudent(student);
+
             } else if ("delete".equals(action)) {
-                int studentId = Integer.parseInt(request.getParameter("studentId"));
+                int studentId = ValidationUtil.parsePositiveInt(request.getParameter("studentId"));
+                if (studentId < 0) {
+                    response.sendRedirect(request.getContextPath() + "/admin/students?error=invalid_student");
+                    return;
+                }
                 studentDAO.deleteStudent(studentId);
             }
-        } catch (NumberFormatException e) {
+        } catch (Exception e) {
             // Invalid input — skip action
         }
 

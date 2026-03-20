@@ -344,6 +344,40 @@ public class StudentDAO extends DBContext {
         return counts;
     }
 
+    // ========== GET BY ID ==========
+
+    public Student getStudentById(int studentId) {
+        String sql = "SELECT * FROM STUDENT WHERE student_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, studentId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapStudent(rs);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // ========== UPDATE ==========
+
+    public boolean updateStudent(Student student) {
+        String sql = "UPDATE STUDENT SET full_name=?, cccd=?, school=?, phone=?, gender=?, address=? WHERE student_id=?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, student.getFull_name());
+            ps.setString(2, student.getCccd());
+            ps.setString(3, student.getSchool());
+            ps.setString(4, student.getPhone());
+            ps.setString(5, student.getGender());
+            ps.setString(6, student.getAddress());
+            ps.setInt(7, student.getStudent_id());
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     // ========== DELETE ==========
 
     public boolean deleteStudent(int studentId) {

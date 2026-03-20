@@ -2,6 +2,7 @@ package Controller;
 
 import dal.*;
 import model.*;
+import util.ValidationUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.*;
 import java.io.IOException;
@@ -20,6 +21,7 @@ public class StudentMaintenanceController extends HttpServlet {
         RequestDAO requestDAO = new RequestDAO();
         RoomDAO roomDAO = new RoomDAO();
         NotificationDAO notiDAO = new NotificationDAO();
+        InvoiceDAO invoiceDAO = new InvoiceDAO();
 
         int studentId = studentDAO.getStudentIdByUserId(user.getUser_id());
         Room room = roomDAO.getRoomByStudent(studentId);
@@ -34,6 +36,9 @@ public class StudentMaintenanceController extends HttpServlet {
         List<Request> requests = requestDAO.getRequestsByStudentPaginated(studentId, status, offset, PAGE_SIZE);
         int totalPages = (int) Math.ceil((double) totalRecords / PAGE_SIZE);
 
+        // Pending bills for sidebar badge
+        int pendingBills = invoiceDAO.countInvoicesByStudent(studentId, "unpaid");
+
         request.setAttribute("requests", requests);
         request.setAttribute("room", room);
         request.setAttribute("currentPage", page);
@@ -41,6 +46,7 @@ public class StudentMaintenanceController extends HttpServlet {
         request.setAttribute("totalRecords", totalRecords);
         request.setAttribute("filterStatus", status);
         request.setAttribute("unreadCount", notiDAO.countUnreadByUserId(user.getUser_id()));
+        request.setAttribute("pendingBills", pendingBills);
         request.getRequestDispatcher("/student/maintenance.jsp").forward(request, response);
     }
 
@@ -56,11 +62,19 @@ public class StudentMaintenanceController extends HttpServlet {
         int studentId = studentDAO.getStudentIdByUserId(user.getUser_id());
         Room room = roomDAO.getRoomByStudent(studentId);
 
+        String title = ValidationUtil.sanitize(request.getParameter("title"));
+        String description = ValidationUtil.sanitize(request.getParameter("description"));
+
+        if (ValidationUtil.isNullOrEmpty(title)) {
+            response.sendRedirect(request.getContextPath() + "/student/maintenance?error=missing_title");
+            return;
+        }
+
         Request req = new Request();
         req.setStudent_id(studentId);
         req.setRoom_id(room != null ? room.getRoom_id() : 0);
-        req.setTitle(request.getParameter("title"));
-        req.setDescription(request.getParameter("description"));
+        req.setTitle(title);
+        req.setDescription(description);
         req.setStatus("pending");
 
         requestDAO.addRequest(req);

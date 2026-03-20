@@ -84,6 +84,37 @@ public class HostelDAO extends DBContext {
         return false;
     }
 
+    /**
+     * Checks if a hostel belongs to a specific landlord.
+     * Used for ownership verification before modify/delete operations.
+     */
+    public boolean isHostelOwnedBy(int hostelId, int landlordId) {
+        String sql = "SELECT COUNT(*) FROM HOSTEL WHERE hostel_id = ? AND landlord_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, hostelId);
+            ps.setInt(2, landlordId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1) > 0;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     * Safely closes the database connection.
+     */
+    public void close() {
+        try {
+            if (connection != null && !connection.isClosed()) {
+                connection.close();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     private Hostel mapHostel(ResultSet rs) throws SQLException {
         Hostel h = new Hostel();
         h.setHostel_id(rs.getInt("hostel_id"));

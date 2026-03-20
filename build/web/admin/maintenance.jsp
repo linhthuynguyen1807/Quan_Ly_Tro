@@ -191,6 +191,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <form action="create-maintenance" method="POST">
+                    <input type="hidden" name="_csrf" value="${sessionScope.csrfToken}"/>
                     <div class="modal-body" style="padding:24px 28px;">
                         <div class="row g-3">
                             <div class="col-12">

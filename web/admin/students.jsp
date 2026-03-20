@@ -144,6 +144,7 @@
                                 <th>Sinh viên</th>
                                 <th>CCCD</th>
                                 <th>SĐT</th>
+                                <th>Trường</th>
                                 <th>Quê quán</th>
                                 <th>Phòng</th>
                                 <th>Trạng thái</th>
@@ -169,15 +170,21 @@
                                             </td>
                                             <td><code style="font-size:0.82rem;">${s.cccd}</code></td>
                                             <td style="font-size:0.85rem;">${s.phone}</td>
+                                            <td style="font-size:0.85rem;">${s.school}</td>
                                             <td style="font-size:0.85rem;">${s.address}</td>
                                             <td><span class="badge-status badge-info">${s.roomNumber}</span></td>
                                             <td>
                                                 <tags:statusBadge status="${s.contractStatus != null ? s.contractStatus : 'active'}"/>
                                             </td>
                                             <td class="text-center">
-                                                <a href="${pageContext.request.contextPath}/admin/view-student?id=${s.student_id}" class="btn btn-sm btn-outline-primary rounded-2 me-1" title="Xem">
+                                                <button class="btn btn-sm btn-outline-info rounded-2 me-1" title="Xem chi tiết"
+                                                        onclick="viewStudent('${s.full_name}', '${s.cccd}', '${s.phone}', '${s.school}', '${s.gender}', '${s.address}', '${s.roomNumber}')">
                                                     <i class="fas fa-eye"></i>
-                                                </a>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-primary rounded-2 me-1" title="Sửa"
+                                                        onclick="editStudent(${s.student_id}, '${s.full_name}', '${s.cccd}', '${s.phone}', '${s.school}', '${s.gender}', '${s.address}')">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
                                                 <button class="btn btn-sm btn-outline-danger rounded-2" title="Xóa"
                                                         onclick="deleteStudent(${s.student_id}, '${s.full_name}')">
                                                     <i class="fas fa-trash"></i>
@@ -188,7 +195,7 @@
                                 </c:when>
                                 <c:otherwise>
                                     <tr>
-                                        <td colspan="8" class="text-center py-5">
+                                        <td colspan="9" class="text-center py-5">
                                             <i class="fas fa-user-graduate fa-3x mb-3" style="color:var(--primary-200);"></i>
                                             <p style="color:var(--text-secondary); margin:0;">Chưa có sinh viên nào trong hệ thống.</p>
                                         </td>
@@ -209,8 +216,210 @@
         </main>
     </div>
 
+    <!-- ==================== ADD STUDENT MODAL ==================== -->
+    <div class="modal fade" id="addStudentModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0" style="border-radius:20px;">
+                <div class="modal-header border-0 pb-0" style="padding:28px 28px 0;">
+                    <h5 class="modal-title" style="font-weight:700;">
+                        <i class="fas fa-user-plus me-2" style="color:var(--primary-500);"></i> Thêm sinh viên mới
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="${pageContext.request.contextPath}/admin/students" method="POST">
+                    <input type="hidden" name="_csrf" value="${sessionScope.csrfToken}"/>
+                    <input type="hidden" name="action" value="add"/>
+                    <div class="modal-body" style="padding:24px 28px;">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" style="font-weight:600; font-size:0.85rem;">User ID <span class="text-danger">*</span></label>
+                                <input type="number" name="userId" class="form-control" placeholder="ID tài khoản" required min="1"
+                                       style="border-radius:12px; padding:10px; border:2px solid #E2E8F0;">
+                                <small class="text-muted">ID của tài khoản đã đăng ký trong hệ thống</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" style="font-weight:600; font-size:0.85rem;">Họ và tên <span class="text-danger">*</span></label>
+                                <input type="text" name="fullName" class="form-control" placeholder="Nguyễn Văn A" required
+                                       style="border-radius:12px; padding:10px; border:2px solid #E2E8F0;">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" style="font-weight:600; font-size:0.85rem;">CCCD <span class="text-danger">*</span></label>
+                                <input type="text" name="cccd" class="form-control" placeholder="001234567890" required maxlength="12"
+                                       style="border-radius:12px; padding:10px; border:2px solid #E2E8F0;">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" style="font-weight:600; font-size:0.85rem;">Số điện thoại</label>
+                                <input type="tel" name="phone" class="form-control" placeholder="0901234567"
+                                       style="border-radius:12px; padding:10px; border:2px solid #E2E8F0;">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" style="font-weight:600; font-size:0.85rem;">Giới tính</label>
+                                <select name="gender" class="form-select" style="border-radius:12px; padding:10px; border:2px solid #E2E8F0;">
+                                    <option value="Nam">Nam</option>
+                                    <option value="Nữ">Nữ</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" style="font-weight:600; font-size:0.85rem;">Trường học</label>
+                                <input type="text" name="school" class="form-control" placeholder="Đại học FPT"
+                                       style="border-radius:12px; padding:10px; border:2px solid #E2E8F0;">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" style="font-weight:600; font-size:0.85rem;">Quê quán</label>
+                                <input type="text" name="address" class="form-control" placeholder="Hà Nội, Việt Nam"
+                                       style="border-radius:12px; padding:10px; border:2px solid #E2E8F0;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0" style="padding:0 28px 28px;">
+                        <button type="button" class="btn btn-light rounded-3 px-4" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn-gradient"><i class="fas fa-save me-1"></i> Lưu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== EDIT STUDENT MODAL ==================== -->
+    <div class="modal fade" id="editStudentModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0" style="border-radius:20px;">
+                <div class="modal-header border-0 pb-0" style="padding:28px 28px 0;">
+                    <h5 class="modal-title" style="font-weight:700;">
+                        <i class="fas fa-user-edit me-2" style="color:var(--primary-500);"></i> Chỉnh sửa sinh viên
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="${pageContext.request.contextPath}/admin/students" method="POST">
+                    <input type="hidden" name="_csrf" value="${sessionScope.csrfToken}"/>
+                    <input type="hidden" name="action" value="update"/>
+                    <input type="hidden" name="studentId" id="editStudentId"/>
+                    <div class="modal-body" style="padding:24px 28px;">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" style="font-weight:600; font-size:0.85rem;">Họ và tên <span class="text-danger">*</span></label>
+                                <input type="text" name="fullName" id="editFullName" class="form-control" required
+                                       style="border-radius:12px; padding:10px; border:2px solid #E2E8F0;">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" style="font-weight:600; font-size:0.85rem;">CCCD <span class="text-danger">*</span></label>
+                                <input type="text" name="cccd" id="editCccd" class="form-control" required maxlength="12"
+                                       style="border-radius:12px; padding:10px; border:2px solid #E2E8F0;">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" style="font-weight:600; font-size:0.85rem;">Số điện thoại</label>
+                                <input type="tel" name="phone" id="editPhone" class="form-control"
+                                       style="border-radius:12px; padding:10px; border:2px solid #E2E8F0;">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" style="font-weight:600; font-size:0.85rem;">Giới tính</label>
+                                <select name="gender" id="editGender" class="form-select" style="border-radius:12px; padding:10px; border:2px solid #E2E8F0;">
+                                    <option value="Nam">Nam</option>
+                                    <option value="Nữ">Nữ</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" style="font-weight:600; font-size:0.85rem;">Trường học</label>
+                                <input type="text" name="school" id="editSchool" class="form-control"
+                                       style="border-radius:12px; padding:10px; border:2px solid #E2E8F0;">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" style="font-weight:600; font-size:0.85rem;">Quê quán</label>
+                                <input type="text" name="address" id="editAddress" class="form-control"
+                                       style="border-radius:12px; padding:10px; border:2px solid #E2E8F0;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0" style="padding:0 28px 28px;">
+                        <button type="button" class="btn btn-light rounded-3 px-4" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn-gradient"><i class="fas fa-save me-1"></i> Cập nhật</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== VIEW STUDENT MODAL ==================== -->
+    <div class="modal fade" id="viewStudentModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0" style="border-radius:20px;">
+                <div class="modal-header border-0 pb-0" style="padding:28px 28px 0;">
+                    <h5 class="modal-title" style="font-weight:700;">
+                        <i class="fas fa-user me-2" style="color:var(--primary-500);"></i> Thông tin sinh viên
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" style="padding:24px 28px;">
+                    <div class="text-center mb-4">
+                        <div id="viewAvatar" style="width:64px; height:64px; background:var(--gradient-main); border-radius:16px; display:inline-flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:1.5rem;"></div>
+                        <h5 id="viewName" class="mt-2 mb-0" style="font-weight:700;"></h5>
+                        <span id="viewGenderBadge" class="badge-status badge-info mt-1"></span>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex justify-content-between px-0 border-0" style="font-size:0.9rem;">
+                            <span style="color:var(--text-secondary);"><i class="fas fa-id-card me-2"></i>CCCD</span>
+                            <strong id="viewCccd"></strong>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between px-0 border-0" style="font-size:0.9rem;">
+                            <span style="color:var(--text-secondary);"><i class="fas fa-phone me-2"></i>Điện thoại</span>
+                            <strong id="viewPhone"></strong>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between px-0 border-0" style="font-size:0.9rem;">
+                            <span style="color:var(--text-secondary);"><i class="fas fa-school me-2"></i>Trường</span>
+                            <strong id="viewSchool"></strong>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between px-0 border-0" style="font-size:0.9rem;">
+                            <span style="color:var(--text-secondary);"><i class="fas fa-map-marker-alt me-2"></i>Quê quán</span>
+                            <strong id="viewAddress"></strong>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between px-0 border-0" style="font-size:0.9rem;">
+                            <span style="color:var(--text-secondary);"><i class="fas fa-door-open me-2"></i>Phòng</span>
+                            <strong id="viewRoom"></strong>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0" style="padding:0 28px 28px;">
+                    <button type="button" class="btn btn-light rounded-3 px-4" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Delete Form (POST) -->
+    <form id="deleteStudentForm" action="${pageContext.request.contextPath}/admin/students" method="POST" style="display:none;">
+        <input type="hidden" name="_csrf" value="${sessionScope.csrfToken}"/>
+        <input type="hidden" name="action" value="delete"/>
+        <input type="hidden" name="studentId" id="deleteStudentId"/>
+    </form>
+
     <%@include file="/includes/scripts.jsp"%>
     <script>
+        // View Student Detail
+        function viewStudent(name, cccd, phone, school, gender, address, room) {
+            document.getElementById('viewAvatar').textContent = name.charAt(0);
+            document.getElementById('viewName').textContent = name;
+            document.getElementById('viewGenderBadge').textContent = gender;
+            document.getElementById('viewCccd').textContent = cccd || '—';
+            document.getElementById('viewPhone').textContent = phone || '—';
+            document.getElementById('viewSchool').textContent = school || '—';
+            document.getElementById('viewAddress').textContent = address || '—';
+            document.getElementById('viewRoom').textContent = room || '—';
+            new bootstrap.Modal(document.getElementById('viewStudentModal')).show();
+        }
+
+        // Edit Student
+        function editStudent(id, name, cccd, phone, school, gender, address) {
+            document.getElementById('editStudentId').value = id;
+            document.getElementById('editFullName').value = name;
+            document.getElementById('editCccd').value = cccd;
+            document.getElementById('editPhone').value = phone;
+            document.getElementById('editSchool').value = school;
+            document.getElementById('editGender').value = gender;
+            document.getElementById('editAddress').value = address;
+            new bootstrap.Modal(document.getElementById('editStudentModal')).show();
+        }
+
+        // Delete Student (via POST)
         function deleteStudent(id, name) {
             Swal.fire({
                 title: 'Xóa sinh viên?',
@@ -218,7 +427,12 @@
                 icon: 'warning', showCancelButton: true,
                 confirmButtonColor: '#EF4444', cancelButtonColor: '#64748B',
                 confirmButtonText: 'Xóa', cancelButtonText: 'Hủy'
-            }).then(r => { if (r.isConfirmed) window.location.href = '${pageContext.request.contextPath}/admin/students?action=delete&studentId=' + id; });
+            }).then(r => {
+                if (r.isConfirmed) {
+                    document.getElementById('deleteStudentId').value = id;
+                    document.getElementById('deleteStudentForm').submit();
+                }
+            });
         }
     </script>
 </body>

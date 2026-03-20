@@ -4,10 +4,13 @@ import dal.HostelDAO;
 import dal.NotificationDAO;
 import model.Hostel;
 import model.User;
+import util.OwnershipUtil;
+import util.ValidationUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.*;
 import java.io.IOException;
 import java.util.List;
+
 public class AdminHostelsController extends HttpServlet {
 
     @Override
@@ -35,13 +38,27 @@ public class AdminHostelsController extends HttpServlet {
         HostelDAO hostelDAO = new HostelDAO();
 
         if ("delete".equals(action)) {
-            int hostelId = Integer.parseInt(request.getParameter("hostelId"));
+            int hostelId = ValidationUtil.parsePositiveInt(request.getParameter("hostelId"));
+            if (hostelId < 0 || !OwnershipUtil.verifyHostelOwnership(hostelId, user.getUser_id())) {
+                response.sendRedirect(request.getContextPath() + "/admin/hostels?error=unauthorized");
+                return;
+            }
             hostelDAO.deleteHostel(hostelId);
+
         } else if ("update".equals(action)) {
-            int hostelId = Integer.parseInt(request.getParameter("hostelId"));
-            String name = request.getParameter("hostelName");
-            String address = request.getParameter("address");
-            String description = request.getParameter("description");
+            int hostelId = ValidationUtil.parsePositiveInt(request.getParameter("hostelId"));
+            if (hostelId < 0 || !OwnershipUtil.verifyHostelOwnership(hostelId, user.getUser_id())) {
+                response.sendRedirect(request.getContextPath() + "/admin/hostels?error=unauthorized");
+                return;
+            }
+            String name = ValidationUtil.sanitize(request.getParameter("hostelName"));
+            String address = ValidationUtil.sanitize(request.getParameter("address"));
+            String description = ValidationUtil.sanitize(request.getParameter("description"));
+
+            if (ValidationUtil.isNullOrEmpty(name) || ValidationUtil.isNullOrEmpty(address)) {
+                response.sendRedirect(request.getContextPath() + "/admin/hostels?error=invalid_input");
+                return;
+            }
 
             Hostel hostel = new Hostel();
             hostel.setHostel_id(hostelId);

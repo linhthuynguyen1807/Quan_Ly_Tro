@@ -14,6 +14,19 @@
         <main class="admin-main">
             <%@include file="/includes/header.jsp"%>
 
+            <c:if test="${not empty successMsg}">
+                <div class="alert alert-success alert-dismissible fade show rounded-3" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>${successMsg}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            </c:if>
+            <c:if test="${not empty errorMsg}">
+                <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>${errorMsg}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            </c:if>
+
             <div class="row g-4">
                 <!-- Profile Card -->
                 <div class="col-lg-4" data-aos="fade-up">
@@ -25,10 +38,10 @@
                         <div style="margin-top:-50px; position:relative; z-index:1; padding:0 24px 24px;">
                             <div style="width:100px; height:100px; background:white; border-radius:24px; margin:0 auto 16px; box-shadow:0 8px 24px rgba(0,0,0,0.1); display:flex; align-items:center; justify-content:center; overflow:hidden;">
                                 <div style="width:100%; height:100%; background:var(--gradient-main); display:flex; align-items:center; justify-content:center; color:white; font-size:2.5rem; font-weight:700;">
-                                    ${sessionScope.username != null ? sessionScope.username.substring(0,1).toUpperCase() : 'A'}
+                                    ${not empty profile.fullName ? profile.fullName.substring(0,1).toUpperCase() : 'A'}
                                 </div>
                             </div>
-                            <h5 style="font-weight:700; margin:0;">${sessionScope.fullname != null ? sessionScope.fullname : 'Admin'}</h5>
+                            <h5 style="font-weight:700; margin:0;">${not empty profile.fullName ? profile.fullName : 'Admin'}</h5>
                             <p style="color:var(--text-secondary); font-size:0.85rem; margin:4px 0 12px;">
                                 <i class="fas fa-user-shield me-1"></i>Quản trị viên
                             </p>
@@ -41,15 +54,15 @@
                             <div class="text-start" style="font-size:0.85rem;">
                                 <div class="d-flex align-items-center gap-3 mb-3">
                                     <i class="fas fa-envelope" style="width:16px; color:var(--primary-500);"></i>
-                                    <span style="color:var(--text-secondary);">${sessionScope.email != null ? sessionScope.email : 'admin@ktx.vn'}</span>
+                                    <span style="color:var(--text-secondary);">${not empty profile.email ? profile.email : 'Chưa cập nhật'}</span>
                                 </div>
                                 <div class="d-flex align-items-center gap-3 mb-3">
                                     <i class="fas fa-phone" style="width:16px; color:var(--primary-500);"></i>
-                                    <span style="color:var(--text-secondary);">${sessionScope.phone != null ? sessionScope.phone : '0123 456 789'}</span>
+                                    <span style="color:var(--text-secondary);">${not empty profile.phone ? profile.phone : 'Chưa cập nhật'}</span>
                                 </div>
                                 <div class="d-flex align-items-center gap-3">
                                     <i class="fas fa-calendar" style="width:16px; color:var(--primary-500);"></i>
-                                    <span style="color:var(--text-secondary);">Tham gia: 01/2024</span>
+                                    <span style="color:var(--text-secondary);">Tham gia: ${not empty profile.createdAt ? profile.createdAt : 'N/A'}</span>
                                 </div>
                             </div>
                         </div>
@@ -63,29 +76,31 @@
                         <h6 style="font-weight:700; margin:0 0 20px;">
                             <i class="fas fa-user-edit me-2" style="color:var(--primary-500);"></i>Thông tin cá nhân
                         </h6>
-                        <form action="update-profile" method="POST">
+                        <form action="${pageContext.request.contextPath}/admin/profile" method="POST">
+                            <input type="hidden" name="_csrf" value="${sessionScope.csrfToken}"/>
+                            <input type="hidden" name="action" value="updateProfile"/>
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label" style="font-weight:600; font-size:0.85rem;">Họ tên</label>
-                                    <input type="text" name="fullname" class="form-control" 
-                                           value="${sessionScope.fullname}" 
+                                    <input type="text" name="fullName" class="form-control" 
+                                           value="${profile.fullName}" 
                                            style="border-radius:12px; padding:10px; border:2px solid #E2E8F0;">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label" style="font-weight:600; font-size:0.85rem;">Username</label>
-                                    <input type="text" class="form-control" value="${sessionScope.username}" disabled
+                                    <input type="text" class="form-control" value="${profile.username}" disabled
                                            style="border-radius:12px; padding:10px; border:2px solid #E2E8F0; background:#F8FAFC;">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label" style="font-weight:600; font-size:0.85rem;">Email</label>
                                     <input type="email" name="email" class="form-control" 
-                                           value="${sessionScope.email}"
+                                           value="${profile.email}"
                                            style="border-radius:12px; padding:10px; border:2px solid #E2E8F0;">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label" style="font-weight:600; font-size:0.85rem;">Số điện thoại</label>
                                     <input type="text" name="phone" class="form-control" 
-                                           value="${sessionScope.phone}"
+                                           value="${profile.phone}"
                                            style="border-radius:12px; padding:10px; border:2px solid #E2E8F0;">
                                 </div>
                             </div>
@@ -102,11 +117,13 @@
                         <h6 style="font-weight:700; margin:0 0 20px;">
                             <i class="fas fa-lock me-2" style="color:var(--primary-500);"></i>Đổi mật khẩu
                         </h6>
-                        <form action="change-password" method="POST">
+                        <form action="${pageContext.request.contextPath}/admin/profile" method="POST">
+                            <input type="hidden" name="_csrf" value="${sessionScope.csrfToken}"/>
+                            <input type="hidden" name="action" value="changePassword"/>
                             <div class="row g-3">
                                 <div class="col-12">
                                     <label class="form-label" style="font-weight:600; font-size:0.85rem;">Mật khẩu hiện tại</label>
-                                    <input type="password" name="currentPassword" class="form-control" required
+                                    <input type="password" name="oldPassword" class="form-control" required
                                            style="border-radius:12px; padding:10px; border:2px solid #E2E8F0;">
                                 </div>
                                 <div class="col-md-6">

@@ -52,6 +52,7 @@ public class StudentDashboardController extends HttpServlet {
             request.setAttribute("notifications", notifications);
             request.setAttribute("unreadNotifications", unreadNotifications);
             request.setAttribute("unpaidInvoices", unpaidInvoices);
+            request.setAttribute("pendingBills", unpaidInvoices);
             request.setAttribute("totalDebt", totalDebt);
         }
 

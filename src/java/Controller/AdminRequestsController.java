@@ -2,6 +2,8 @@ package Controller;
 
 import dal.*;
 import model.*;
+import util.OwnershipUtil;
+import util.ValidationUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.*;
 import java.io.IOException;
@@ -34,7 +36,16 @@ public class AdminRequestsController extends HttpServlet {
         List<Request> requests;
 
         if (hostelIdParam != null && !hostelIdParam.isEmpty()) {
-            int hostelId = Integer.parseInt(hostelIdParam);
+            int hostelId;
+            try { hostelId = Integer.parseInt(hostelIdParam); } catch (NumberFormatException e) {
+                response.sendRedirect(request.getContextPath() + "/admin/requests?error=invalid_input");
+                return;
+            }
+            // Ownership verification: prevent IDOR
+            if (!OwnershipUtil.verifyHostelOwnership(hostelId, user.getUser_id())) {
+                response.sendRedirect(request.getContextPath() + "/admin/requests?error=unauthorized");
+                return;
+            }
             totalRecords = requestDAO.countRequestsByHostel(hostelId, status, search);
             requests = requestDAO.getRequestsByHostelPaginated(hostelId, status, search, offset, PAGE_SIZE);
             request.setAttribute("selectedHostelId", hostelId);
@@ -67,8 +78,20 @@ public class AdminRequestsController extends HttpServlet {
         RequestDAO requestDAO = new RequestDAO();
 
         if ("updateStatus".equals(action)) {
-            int requestId = Integer.parseInt(request.getParameter("requestId"));
-            String status = request.getParameter("status");
+            int requestId = ValidationUtil.parsePositiveInt(request.getParameter("requestId"));
+            String status = ValidationUtil.sanitize(request.getParameter("status"));
+
+            if (requestId < 0 || ValidationUtil.isNullOrEmpty(status)) {
+                response.sendRedirect(request.getContextPath() + "/admin/requests?error=invalid_input");
+                return;
+            }
+
+            // Whitelist allowed status values
+            if (!ValidationUtil.isAllowedValue(status, "pending", "in_progress", "resolved", "rejected")) {
+                response.sendRedirect(request.getContextPath() + "/admin/requests?error=invalid_status");
+                return;
+            }
+
             requestDAO.updateRequestStatus(requestId, status);
         }
 

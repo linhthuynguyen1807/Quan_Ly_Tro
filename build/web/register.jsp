@@ -204,6 +204,7 @@
 
             <!-- Register Form -->
             <form action="register" method="POST" id="registerForm">
+                <input type="hidden" name="_csrf" value="${sessionScope.csrfToken}"/>
                 <input type="hidden" name="role" value="student">
 
                 <div class="form-group">

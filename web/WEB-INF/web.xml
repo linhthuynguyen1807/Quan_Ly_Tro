@@ -68,6 +68,27 @@
         <url-pattern>/student/*</url-pattern>
     </filter-mapping>
 
+    <filter>
+        <filter-name>CsrfFilter</filter-name>
+        <filter-class>filter.CsrfFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>CsrfFilter</filter-name>
+        <url-pattern>/admin/*</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>CsrfFilter</filter-name>
+        <url-pattern>/student/*</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>CsrfFilter</filter-name>
+        <url-pattern>/login</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>CsrfFilter</filter-name>
+        <url-pattern>/register</url-pattern>
+    </filter-mapping>
+
     <!-- ============ AUTH SERVLETS ============ -->
     <servlet>
         <servlet-name>LoginController</servlet-name>

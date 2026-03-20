@@ -287,6 +287,7 @@
 
             <!-- Login Form -->
             <form action="login" method="POST" id="loginForm">
+                <input type="hidden" name="_csrf" value="${sessionScope.csrfToken}"/>
                 <div class="form-group">
                     <label class="form-label-custom">Tên đăng nhập</label>
                     <div class="input-wrapper">

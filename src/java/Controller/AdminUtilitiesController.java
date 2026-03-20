@@ -2,6 +2,8 @@ package Controller;
 
 import dal.*;
 import model.*;
+import util.OwnershipUtil;
+import util.ValidationUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.*;
 import java.io.IOException;
@@ -35,7 +37,15 @@ public class AdminUtilitiesController extends HttpServlet {
 
         String hostelIdParam = request.getParameter("hostelId");
         if (hostelIdParam != null && !hostelIdParam.isEmpty()) {
-            selectedHostelId = Integer.parseInt(hostelIdParam);
+            try { selectedHostelId = Integer.parseInt(hostelIdParam); } catch (NumberFormatException e) {
+                response.sendRedirect(request.getContextPath() + "/admin/utilities?error=invalid_input");
+                return;
+            }
+            // Ownership verification: prevent IDOR
+            if (!OwnershipUtil.verifyHostelOwnership(selectedHostelId, user.getUser_id())) {
+                response.sendRedirect(request.getContextPath() + "/admin/utilities?error=unauthorized");
+                return;
+            }
         } else if (!hostels.isEmpty()) {
             selectedHostelId = hostels.get(0).getHostel_id();
         }
@@ -64,19 +74,41 @@ public class AdminUtilitiesController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        ReadingDAO readingDAO = new ReadingDAO();
+        User user = (User) request.getSession().getAttribute("user");
 
+        int roomId = ValidationUtil.parsePositiveInt(request.getParameter("roomId"));
+        String monthStr = ValidationUtil.sanitize(request.getParameter("month"));
+        String yearStr = ValidationUtil.sanitize(request.getParameter("year"));
+        int prevElectric = ValidationUtil.parsePositiveInt(request.getParameter("prevElectric"));
+        int currElectric = ValidationUtil.parsePositiveInt(request.getParameter("currElectric"));
+        int prevWater = ValidationUtil.parsePositiveInt(request.getParameter("prevWater"));
+        int currWater = ValidationUtil.parsePositiveInt(request.getParameter("currWater"));
+        String hostelId = request.getParameter("hostelId");
+
+        // Validate numeric inputs (allow 0 for meter readings as they could be starting values)
+        if (roomId < 0 || ValidationUtil.isNullOrEmpty(monthStr) || ValidationUtil.isNullOrEmpty(yearStr)) {
+            response.sendRedirect(request.getContextPath() + "/admin/utilities?hostelId=" + hostelId + "&error=invalid_input");
+            return;
+        }
+
+        // Ownership verification
+        int hostelIdInt = ValidationUtil.parsePositiveInt(hostelId);
+        if (hostelIdInt > 0 && !OwnershipUtil.verifyHostelOwnership(hostelIdInt, user.getUser_id())) {
+            response.sendRedirect(request.getContextPath() + "/admin/utilities?error=unauthorized");
+            return;
+        }
+
+        ReadingDAO readingDAO = new ReadingDAO();
         ElectricityWaterReading reading = new ElectricityWaterReading();
-        reading.setRoom_id(Integer.parseInt(request.getParameter("roomId")));
-        reading.setReadingMonth(request.getParameter("month") + "/" + request.getParameter("year"));
-        reading.setElectricOld(Integer.parseInt(request.getParameter("prevElectric")));
-        reading.setElectricNew(Integer.parseInt(request.getParameter("currElectric")));
-        reading.setWaterOld(Integer.parseInt(request.getParameter("prevWater")));
-        reading.setWaterNew(Integer.parseInt(request.getParameter("currWater")));
+        reading.setRoom_id(roomId);
+        reading.setReadingMonth(monthStr + "/" + yearStr);
+        reading.setElectricOld(prevElectric > 0 ? prevElectric : 0);
+        reading.setElectricNew(currElectric > 0 ? currElectric : 0);
+        reading.setWaterOld(prevWater > 0 ? prevWater : 0);
+        reading.setWaterNew(currWater > 0 ? currWater : 0);
 
         readingDAO.addReading(reading);
 
-        String hostelId = request.getParameter("hostelId");
         response.sendRedirect(request.getContextPath() + "/admin/utilities?hostelId=" + hostelId);
     }
 }

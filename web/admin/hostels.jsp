@@ -114,6 +114,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <form action="add-hostel" method="POST">
+                    <input type="hidden" name="_csrf" value="${sessionScope.csrfToken}"/>
                     <div class="modal-body" style="padding:24px 28px;">
                         <div class="mb-3">
                             <label class="form-label" style="font-weight:600; font-size:0.85rem;">Tên khu trọ</label>

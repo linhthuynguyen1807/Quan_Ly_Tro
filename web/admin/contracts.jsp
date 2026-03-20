@@ -135,6 +135,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <form action="${pageContext.request.contextPath}/admin/contracts" method="POST">
+                    <input type="hidden" name="_csrf" value="${sessionScope.csrfToken}"/>
                     <input type="hidden" name="action" value="add">
                     <div class="modal-body" style="padding:24px 28px;">
                         <div class="row g-3">
@@ -201,7 +202,8 @@
                     const form = document.createElement('form');
                     form.method = 'POST';
                     form.action = '${pageContext.request.contextPath}/admin/contracts';
-                    form.innerHTML = '<input type="hidden" name="action" value="terminate">' +
+                    form.innerHTML = '<input type="hidden" name="_csrf" value="${sessionScope.csrfToken}">' +
+                                     '<input type="hidden" name="action" value="terminate">' +
                                      '<input type="hidden" name="contractId" value="' + id + '">';
                     document.body.appendChild(form);
                     form.submit();

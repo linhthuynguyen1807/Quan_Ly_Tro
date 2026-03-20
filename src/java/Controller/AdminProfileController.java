@@ -2,9 +2,11 @@ package Controller;
 
 import dal.UserDAO;
 import model.User;
+import util.ValidationUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.*;
 import java.io.IOException;
+
 public class AdminProfileController extends HttpServlet {
 
     @Override
@@ -27,15 +29,33 @@ public class AdminProfileController extends HttpServlet {
         UserDAO userDAO = new UserDAO();
 
         if ("updateProfile".equals(action)) {
-            String fullName = request.getParameter("fullName");
+            String fullName = ValidationUtil.sanitize(request.getParameter("fullName"));
             String email = request.getParameter("email");
             String phone = request.getParameter("phone");
+
+            // Validate email format if provided
+            if (email != null && !email.trim().isEmpty() && !ValidationUtil.isValidEmail(email.trim())) {
+                request.setAttribute("errorMsg", "Email không hợp lệ!");
+                User profile = userDAO.getUserById(user.getUser_id());
+                request.setAttribute("profile", profile);
+                request.getRequestDispatcher("/admin/profile.jsp").forward(request, response);
+                return;
+            }
+
+            // Validate phone format if provided
+            if (phone != null && !phone.trim().isEmpty() && !ValidationUtil.isValidPhone(phone.trim())) {
+                request.setAttribute("errorMsg", "Số điện thoại không hợp lệ!");
+                User profile = userDAO.getUserById(user.getUser_id());
+                request.setAttribute("profile", profile);
+                request.getRequestDispatcher("/admin/profile.jsp").forward(request, response);
+                return;
+            }
 
             User updated = new User();
             updated.setUser_id(user.getUser_id());
             updated.setFullName(fullName);
-            updated.setEmail(email);
-            updated.setPhone(phone);
+            updated.setEmail(email != null ? email.trim() : null);
+            updated.setPhone(phone != null ? phone.trim() : null);
             userDAO.updateProfile(updated);
 
             // Refresh session
@@ -48,7 +68,9 @@ public class AdminProfileController extends HttpServlet {
             String newPassword = request.getParameter("newPassword");
             String confirmPassword = request.getParameter("confirmPassword");
 
-            if (!newPassword.equals(confirmPassword)) {
+            if (ValidationUtil.isNullOrEmpty(oldPassword) || ValidationUtil.isNullOrEmpty(newPassword)) {
+                request.setAttribute("errorMsg", "Vui lòng nhập đầy đủ thông tin!");
+            } else if (!newPassword.equals(confirmPassword)) {
                 request.setAttribute("errorMsg", "Mật khẩu xác nhận không khớp!");
             } else if (newPassword.length() < 6) {
                 request.setAttribute("errorMsg", "Mật khẩu mới phải có ít nhất 6 ký tự!");
