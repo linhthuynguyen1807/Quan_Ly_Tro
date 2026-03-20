@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0">
+
+    <!-- Welcome File - redirects to /login via LoginController -->
+    <welcome-file-list>
+        <welcome-file>login.jsp</welcome-file>
+    </welcome-file-list>
+
+    <!-- ============ FILTERS ============ -->
+    <filter>
+        <filter-name>CharacterEncodingFilter</filter-name>
+        <filter-class>filter.CharacterEncodingFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>CharacterEncodingFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <filter>
+        <filter-name>SecurityHeadersFilter</filter-name>
+        <filter-class>filter.SecurityHeadersFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>SecurityHeadersFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <filter>
+        <filter-name>JspAccessFilter</filter-name>
+        <filter-class>filter.JspAccessFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>JspAccessFilter</filter-name>
+        <url-pattern>*.jsp</url-pattern>
+    </filter-mapping>
+
+    <filter>
+        <filter-name>AuthFilter</filter-name>
+        <filter-class>filter.AuthFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>AuthFilter</filter-name>
+        <url-pattern>/admin/*</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>AuthFilter</filter-name>
+        <url-pattern>/student/*</url-pattern>
+    </filter-mapping>
+
+    <filter>
+        <filter-name>AdminFilter</filter-name>
+        <filter-class>filter.AdminFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>AdminFilter</filter-name>
+        <url-pattern>/admin/*</url-pattern>
+    </filter-mapping>
+
+    <filter>
+        <filter-name>StudentFilter</filter-name>
+        <filter-class>filter.StudentFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>StudentFilter</filter-name>
+        <url-pattern>/student/*</url-pattern>
+    </filter-mapping>
+
+    <!-- ============ AUTH SERVLETS ============ -->
+    <servlet>
+        <servlet-name>LoginController</servlet-name>
+        <servlet-class>Controller.LoginController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>LoginController</servlet-name>
+        <url-pattern>/login</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>RegisterController</servlet-name>
+        <servlet-class>Controller.RegisterController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>RegisterController</servlet-name>
+        <url-pattern>/register</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>LogoutController</servlet-name>
+        <servlet-class>Controller.LogoutController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>LogoutController</servlet-name>
+        <url-pattern>/logout</url-pattern>
+    </servlet-mapping>
+
+    <!-- ============ ADMIN SERVLETS ============ -->
+    <servlet>
+        <servlet-name>AdminDashboardController</servlet-name>
+        <servlet-class>Controller.AdminDashboardController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdminDashboardController</servlet-name>
+        <url-pattern>/admin/dashboard</url-pattern>
+    </servlet-mapping>
+    <!-- Legacy dashboard URL redirect -->
+    <servlet-mapping>
+        <servlet-name>AdminDashboardController</servlet-name>
+        <url-pattern>/admin-dashboard</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AdminHostelsController</servlet-name>
+        <servlet-class>Controller.AdminHostelsController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdminHostelsController</servlet-name>
+        <url-pattern>/admin/hostels</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AddHostelController</servlet-name>
+        <servlet-class>Controller.AddHostelController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AddHostelController</servlet-name>
+        <url-pattern>/admin/hostels/add</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ViewHostelDetailController</servlet-name>
+        <servlet-class>Controller.ViewHostelDetailController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ViewHostelDetailController</servlet-name>
+        <url-pattern>/admin/hostel-detail</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AdminRoomsController</servlet-name>
+        <servlet-class>Controller.AdminRoomsController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdminRoomsController</servlet-name>
+        <url-pattern>/admin/rooms</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AdminStudentsController</servlet-name>
+        <servlet-class>Controller.AdminStudentsController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdminStudentsController</servlet-name>
+        <url-pattern>/admin/students</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AdminContractsController</servlet-name>
+        <servlet-class>Controller.AdminContractsController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdminContractsController</servlet-name>
+        <url-pattern>/admin/contracts</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AdminInvoicesController</servlet-name>
+        <servlet-class>Controller.AdminInvoicesController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdminInvoicesController</servlet-name>
+        <url-pattern>/admin/invoices</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AdminUtilitiesController</servlet-name>
+        <servlet-class>Controller.AdminUtilitiesController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdminUtilitiesController</servlet-name>
+        <url-pattern>/admin/utilities</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminUtilitiesController</servlet-name>
+        <url-pattern>/admin/settings</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AdminRequestsController</servlet-name>
+        <servlet-class>Controller.AdminRequestsController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdminRequestsController</servlet-name>
+        <url-pattern>/admin/requests</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AdminBillingController</servlet-name>
+        <servlet-class>Controller.AdminBillingController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdminBillingController</servlet-name>
+        <url-pattern>/admin/billing</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AdminMaintenanceController</servlet-name>
+        <servlet-class>Controller.AdminMaintenanceController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdminMaintenanceController</servlet-name>
+        <url-pattern>/admin/maintenance</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AdminReportsController</servlet-name>
+        <servlet-class>Controller.AdminReportsController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdminReportsController</servlet-name>
+        <url-pattern>/admin/reports</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AdminProfileController</servlet-name>
+        <servlet-class>Controller.AdminProfileController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AdminProfileController</servlet-name>
+        <url-pattern>/admin/profile</url-pattern>
+    </servlet-mapping>
+
+    <!-- ============ STUDENT SERVLETS ============ -->
+    <servlet>
+        <servlet-name>StudentDashboardController</servlet-name>
+        <servlet-class>Controller.StudentDashboardController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>StudentDashboardController</servlet-name>
+        <url-pattern>/student/home</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>StudentDashboardController</servlet-name>
+        <url-pattern>/student/dashboard</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>StudentRoomController</servlet-name>
+        <servlet-class>Controller.StudentRoomController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>StudentRoomController</servlet-name>
+        <url-pattern>/student/room</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>StudentBillingController</servlet-name>
+        <servlet-class>Controller.StudentBillingController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>StudentBillingController</servlet-name>
+        <url-pattern>/student/billing</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>StudentMaintenanceController</servlet-name>
+        <servlet-class>Controller.StudentMaintenanceController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>StudentMaintenanceController</servlet-name>
+        <url-pattern>/student/maintenance</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>StudentNotificationsController</servlet-name>
+        <servlet-class>Controller.StudentNotificationsController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>StudentNotificationsController</servlet-name>
+        <url-pattern>/student/notifications</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>StudentProfileController</servlet-name>
+        <servlet-class>Controller.StudentProfileController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>StudentProfileController</servlet-name>
+        <url-pattern>/student/profile</url-pattern>
+    </servlet-mapping>
+
+    <!-- Session Config -->
+    <session-config>
+        <session-timeout>30</session-timeout>
+    </session-config>
+
+    <!-- Error Pages -->
+    <error-page>
+        <error-code>404</error-code>
+        <location>/error/error-404.jsp</location>
+    </error-page>
+    <error-page>
+        <error-code>500</error-code>
+        <location>/error/error-500.jsp</location>
+    </error-page>
+    <error-page>
+        <error-code>403</error-code>
+        <location>/error/error-404.jsp</location>
+    </error-page>
+</web-app>
