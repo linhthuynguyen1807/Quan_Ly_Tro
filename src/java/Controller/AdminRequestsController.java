@@ -68,7 +68,7 @@ public class AdminRequestsController extends HttpServlet {
         request.setAttribute("search", search);
         request.setAttribute("filterStatus", status);
         request.setAttribute("unreadCount", notiDAO.countUnreadByUserId(user.getUser_id()));
-        request.getRequestDispatcher("/admin/maintenance.jsp").forward(request, response);
+        request.getRequestDispatcher("/admin/requests.jsp").forward(request, response);
     }
 
     @Override

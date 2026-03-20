@@ -68,7 +68,14 @@ public class AdminUtilitiesController extends HttpServlet {
         request.setAttribute("search", search);
         request.setAttribute("filterMonth", month);
         request.setAttribute("unreadCount", notiDAO.countUnreadByUserId(user.getUser_id()));
-        request.getRequestDispatcher("/admin/settings.jsp").forward(request, response);
+
+        // Provide room list for the add-reading modal
+        RoomDAO roomDAO = new RoomDAO();
+        if (selectedHostelId > 0) {
+            request.setAttribute("rooms", roomDAO.getRoomsByHostel(selectedHostelId));
+        }
+
+        request.getRequestDispatcher("/admin/utilities.jsp").forward(request, response);
     }
 
     @Override
